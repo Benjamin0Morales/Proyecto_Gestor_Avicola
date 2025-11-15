@@ -1,0 +1,78 @@
+{% extends 'form_base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.transaction_date.label_tag }}
+            {{ form.transaction_date }}
+            {% if form.transaction_date.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.transaction_date.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.category.label_tag }}
+            {{ form.category }}
+            {% if form.category.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.category.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    {{ form.description.label_tag }}
+    {{ form.description }}
+    {% if form.description.errors %}
+    <div class="invalid-feedback d-block">
+        {{ form.description.errors }}
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.amount_clp.label_tag }}
+            {{ form.amount_clp }}
+            {% if form.amount_clp.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.amount_clp.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.payment_method.label_tag }}
+            {{ form.payment_method }}
+            {% if form.payment_method.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.payment_method.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    {{ form.reference_doc.label_tag }}
+    {{ form.reference_doc }}
+    {% if form.reference_doc.errors %}
+    <div class="invalid-feedback d-block">
+        {{ form.reference_doc.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">Número de factura, boleta o comprobante (opcional)</small>
+</div>
+{% endblock %}

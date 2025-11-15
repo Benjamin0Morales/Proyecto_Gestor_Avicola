@@ -1,0 +1,44 @@
+{% extends 'form_base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.consumption_date.label_tag }}
+            {{ form.consumption_date }}
+            {% if form.consumption_date.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.consumption_date.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.total_consumed_kg.label_tag }}
+            {{ form.total_consumed_kg }}
+            {% if form.total_consumed_kg.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.total_consumed_kg.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    {{ form.feed_mix.label_tag }}
+    {{ form.feed_mix }}
+    {% if form.feed_mix.errors %}
+    <div class="invalid-feedback d-block">
+        {{ form.feed_mix.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">
+        <i class="bi bi-info-circle"></i> Selecciona la mezcla consumida (opcional)
+    </small>
+</div>
+{% endblock %}

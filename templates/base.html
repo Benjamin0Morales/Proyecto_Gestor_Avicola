@@ -1,0 +1,175 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Avícola Eugenio{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="bi bi-egg-fried"></i> Avícola Eugenio
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-clipboard-data"></i> Producción
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'farm_status_list' %}">Estado de Granja</a></li>
+                            <li><a class="dropdown-item" href="{% url 'egg_production_list' %}">Producción de Huevos</a></li>
+                            <li><a class="dropdown-item" href="{% url 'mortality_list' %}">Mortalidad</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-basket"></i> Alimentación
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'feed_item_list' %}"><i class="bi bi-box-seam"></i> Items de Alimento</a></li>
+                            <li><a class="dropdown-item" href="{% url 'feed_inventory_list' %}"><i class="bi bi-box-seam-fill"></i> Inventario</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'feed_mix_list' %}"><i class="bi bi-diagram-3"></i> Mezclas</a></li>
+                            <li><a class="dropdown-item" href="{% url 'feed_consumption_list' %}"><i class="bi bi-graph-down"></i> Consumo</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-currency-dollar"></i> Finanzas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'finance_transaction_list' %}"><i class="bi bi-list-ul"></i> Transacciones</a></li>
+                            <li><a class="dropdown-item" href="{% url 'finance_category_list' %}"><i class="bi bi-tags"></i> Categorías</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'financial_summary' %}"><i class="bi bi-file-earmark-bar-graph"></i> Resumen Financiero</a></li>
+                        </ul>
+                    </li>
+                    {% if user.is_authenticated and user.rol == 'admin' %}
+                        {% if not request.session.view_as_role or request.session.view_as_role == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'user_list' %}">
+                                <i class="bi bi-people"></i> Usuarios
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    {% if user.rol == 'admin' and request.session.view_as_role and request.session.view_as_role != 'admin' %}
+                    <li class="nav-item">
+                        <span class="nav-link text-warning">
+                            <i class="bi bi-eye-fill"></i> 
+                            <small>Viendo como: 
+                                {% if request.session.view_as_role == 'worker' %}Trabajador
+                                {% elif request.session.view_as_role == 'accountant' %}Contador
+                                {% endif %}
+                            </small>
+                        </span>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <span class="dropdown-item-text">
+                                    <small class="text-muted">
+                                        {% if user.rol == 'admin' %}
+                                            <i class="bi bi-shield-fill"></i> Administrador
+                                        {% elif user.rol == 'accountant' %}
+                                            <i class="bi bi-calculator"></i> Contador
+                                        {% else %}
+                                            <i class="bi bi-person"></i> Trabajador
+                                        {% endif %}
+                                    </small>
+                                </span>
+                            </li>
+                            
+                            {% if user.rol == 'admin' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-header">
+                                <i class="bi bi-eye"></i> Ver como:
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if not request.session.view_as_role or request.session.view_as_role == 'admin' %}active{% endif %}" 
+                                   href="{% url 'switch_view_role' 'admin' %}">
+                                    <i class="bi bi-shield-check"></i> Admin (Normal)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.session.view_as_role == 'worker' %}active{% endif %}" 
+                                   href="{% url 'switch_view_role' 'worker' %}">
+                                    <i class="bi bi-person"></i> Trabajador
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.session.view_as_role == 'accountant' %}active{% endif %}" 
+                                   href="{% url 'switch_view_role' 'accountant' %}">
+                                    <i class="bi bi-calculator"></i> Contador
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'web_logout' %}">
+                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'web_login' %}">Iniciar Sesión</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <main class="container-fluid py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 Avícola Eugenio - Sistema de Gestión</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

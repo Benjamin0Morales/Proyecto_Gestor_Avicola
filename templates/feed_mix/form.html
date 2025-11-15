@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi {{ icon }}"></i> {{ title }}
+        </h1>
+        <p class="text-muted">Crea una mezcla seleccionando los items disponibles en inventario</p>
+    </div>
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Información de la Mezcla -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información de la Mezcla</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="{{ form.mix_date.id_for_label }}" class="form-label">
+                            {{ form.mix_date.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.mix_date }}
+                        {% if form.mix_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.mix_date.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            {{ form.description.label }}
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">Ej: Mezcla 70/30 maíz/soya</small>
+                    </div>
+                    
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> El peso total se calcula automáticamente según los items que agregues.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Items Disponibles -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-box-seam-fill"></i> Items Disponibles en Inventario</h5>
+                </div>
+                <div class="card-body">
+                    {% if available_items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-end">Stock Disponible</th>
+                                    <th>Unidad</th>
+                                    <th class="text-end">Cantidad a Usar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in available_items %}
+                                <tr>
+                                    <td class="fw-bold">{{ item.item_name }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-success">
+                                            {{ item.inventory.quantity|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                    <td>{{ item.get_unit_type_display }}</td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" 
+                                                   name="item_{{ item.pk }}_quantity" 
+                                                   class="form-control text-end" 
+                                                   min="0" 
+                                                   max="{{ item.inventory.quantity }}" 
+                                                   step="0.01" 
+                                                   value="0"
+                                                   placeholder="0.00">
+                                            <span class="input-group-text">{{ item.unit_type }}</span>
+                                        </div>
+                                        <small class="text-muted">Máx: {{ item.inventory.quantity|floatformat:2 }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>Importante:</strong> Al crear la mezcla, las cantidades se descontarán automáticamente del inventario.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger mb-0">
+                        <i class="bi bi-exclamation-circle"></i> 
+                        <strong>No hay items disponibles</strong><br>
+                        No hay items con stock en el inventario. Por favor, registra compras primero.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex gap-2">
+        {% if available_items %}
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check-circle"></i> Crear Mezcla
+        </button>
+        {% else %}
+        <button type="button" class="btn btn-primary btn-lg" disabled>
+            <i class="bi bi-check-circle"></i> Crear Mezcla
+        </button>
+        {% endif %}
+        <a href="{% url cancel_url %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </a>
+        <a href="{% url 'feed_inventory_list' %}" class="btn btn-outline-info btn-lg">
+            <i class="bi bi-box-seam-fill"></i> Ver Inventario
+        </a>
+    </div>
+</form>
+
+{% endblock %}

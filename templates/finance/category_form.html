@@ -1,0 +1,47 @@
+{% extends 'form_base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.category_name.label_tag }}
+            {{ form.category_name }}
+            {% if form.category_name.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.category_name.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.type.label_tag }}
+            {{ form.type }}
+            {% if form.type.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.type.errors }}
+            </div>
+            {% endif %}
+            <small class="form-text text-muted">
+                <i class="bi bi-info-circle"></i> 
+                <span class="badge bg-success">Ingreso</span> o 
+                <span class="badge bg-danger">Gasto</span>
+            </small>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    {{ form.description.label_tag }}
+    {{ form.description }}
+    {% if form.description.errors %}
+    <div class="invalid-feedback d-block">
+        {{ form.description.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">Descripción de la categoría (opcional)</small>
+</div>
+{% endblock %}

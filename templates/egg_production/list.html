@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Producción de Huevos - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-egg-fried"></i> Producción de Huevos
+        </h1>
+        <p class="text-muted">Registro diario de producción por tamaño</p>
+    </div>
+    <div class="col-auto">
+        {% if can_write_production %}
+        <a href="{% url 'egg_production_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva Producción
+        </a>
+        {% else %}
+        <span class="badge bg-secondary">
+            <i class="bi bi-eye"></i> Solo lectura
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tamaño</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Método</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for production in productions %}
+                    <tr>
+                        <td>{{ production.production_date|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if production.size_code == 'small' %}
+                                <span class="badge bg-warning">Pequeño</span>
+                            {% elif production.size_code == 'medium' %}
+                                <span class="badge bg-info">Mediano</span>
+                            {% else %}
+                                <span class="badge bg-success">Grande</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold">{{ production.quantity }}</td>
+                        <td>
+                            {% if production.source_method == 'manual' %}
+                                <i class="bi bi-hand-index"></i> Manual
+                            {% else %}
+                                <i class="bi bi-camera"></i> Visión
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if production.is_validated %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Validado
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-clock"></i> Pendiente
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if can_write_production %}
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'egg_production_edit' production.pk %}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'egg_production_delete' production.pk %}" 
+                                   class="btn btn-outline-danger" title="Eliminar"
+                                   onclick="return confirm('¿Eliminar este registro?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No hay registros de producción
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if productions.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if productions.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productions.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ productions.number }} de {{ productions.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if productions.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productions.next_page_number }}">Siguiente</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'form_base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.item_name.label_tag }}
+            {{ form.item_name }}
+            {% if form.item_name.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.item_name.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.supplier_name.label_tag }}
+            {{ form.supplier_name }}
+            {% if form.supplier_name.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.supplier_name.errors }}
+            </div>
+            {% endif %}
+            <small class="form-text text-muted">Opcional</small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.unit_cost_clp.label_tag }}
+            {{ form.unit_cost_clp }}
+            {% if form.unit_cost_clp.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.unit_cost_clp.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.unit_type.label_tag }}
+            {{ form.unit_type }}
+            {% if form.unit_type.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.unit_type.errors }}
+            </div>
+            {% endif %}
+            <small class="form-text text-muted">
+                <i class="bi bi-info-circle"></i> Ej: kg, litros, unidades
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

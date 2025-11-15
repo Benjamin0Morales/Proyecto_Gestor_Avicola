@@ -1,0 +1,152 @@
+{% extends 'form_base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {% if form.email.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.email.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.full_name.label_tag }}
+            {{ form.full_name }}
+            {% if form.full_name.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.full_name.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.rol.label_tag }}
+            {{ form.rol }}
+            {% if form.rol.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.rol.errors }}
+            </div>
+            {% endif %}
+            <small class="form-text text-muted">
+                <i class="bi bi-info-circle"></i> 
+                <strong>Admin:</strong> Acceso total | 
+                <strong>Contador:</strong> Finanzas | 
+                <strong>Trabajador:</strong> Producción
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label">&nbsp;</label>
+            <div class="form-check">
+                {{ form.is_active }}
+                {{ form.is_active.label_tag }}
+            </div>
+            {% if form.is_active.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.is_active.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<hr class="my-4">
+
+{% if form.change_password %}
+<!-- Edit form with optional password change -->
+<div class="mb-3">
+    <div class="form-check">
+        {{ form.change_password }}
+        {{ form.change_password.label_tag }}
+    </div>
+</div>
+
+<div id="password-fields" style="display: none;">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                {{ form.password.label_tag }}
+                {{ form.password }}
+                {% if form.password.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.password.errors }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="mb-3">
+                {{ form.password_confirm.label_tag }}
+                {{ form.password_confirm }}
+                {% if form.password_confirm.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.password_confirm.errors }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const changePasswordCheckbox = document.getElementById('id_change_password');
+    const passwordFields = document.getElementById('password-fields');
+    
+    changePasswordCheckbox.addEventListener('change', function() {
+        passwordFields.style.display = this.checked ? 'block' : 'none';
+    });
+});
+</script>
+
+{% else %}
+<!-- Create form with required password -->
+<h5 class="mb-3">
+    <i class="bi bi-key"></i> Contraseña
+</h5>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.password.label_tag }}
+            {{ form.password }}
+            {% if form.password.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.password.errors }}
+            </div>
+            {% endif %}
+            <small class="form-text text-muted">
+                Mínimo 6 caracteres
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.password_confirm.label_tag }}
+            {{ form.password_confirm }}
+            {% if form.password_confirm.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.password_confirm.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

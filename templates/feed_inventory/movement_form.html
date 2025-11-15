@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi {{ icon }}"></i> {{ title }}
+        </h1>
+        <p class="text-muted">Registra compras, ajustes y otros movimientos de inventario</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.feed_item.id_for_label }}" class="form-label">
+                                {{ form.feed_item.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.feed_item }}
+                            {% if form.feed_item.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.feed_item.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.movement_type.id_for_label }}" class="form-label">
+                                {{ form.movement_type.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.movement_type }}
+                            {% if form.movement_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.movement_type.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-1">
+                                <strong>Compra:</strong> Entrada de stock | 
+                                <strong>Uso:</strong> Salida por consumo | 
+                                <strong>Desperdicio:</strong> Pérdida (registra gasto financiero)
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                {{ form.quantity.label }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.quantity }}
+                                <span class="input-group-text" id="unit-display">-</span>
+                            </div>
+                            {% if form.quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.quantity.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-1">
+                                <strong>⚠️ Ingresa solo el número</strong> (ej: 100, no "100 kg"). La unidad se muestra automáticamente.
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.movement_date.id_for_label }}" class="form-label">
+                                {{ form.movement_date.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.movement_date }}
+                            {% if form.movement_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.movement_date.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.reference.id_for_label }}" class="form-label">
+                                {{ form.reference.label }}
+                            </label>
+                            {{ form.reference }}
+                            {% if form.reference.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.reference.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.unit_cost_clp.id_for_label }}" class="form-label">
+                                {{ form.unit_cost_clp.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.unit_cost_clp }}
+                            </div>
+                            {% if form.unit_cost_clp.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.unit_cost_clp.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-1" id="unit-cost-info">
+                                Se usa el precio registrado del item
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="total-cost-row" style="display: none;">
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-success">
+                                <h5 class="alert-heading">💰 Costo Total Calculado</h5>
+                                <p class="mb-0 fs-4" id="total-cost-display">$0</p>
+                                <small class="text-muted" id="calculation-detail"></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                            {{ form.notes.label }}
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Guardar Movimiento
+                        </button>
+                        <a href="{% url cancel_url %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-info-circle"></i> Ayuda</h5>
+                <p class="card-text">
+                    <strong>Tipos de Movimiento:</strong>
+                </p>
+                <ul class="small">
+                    <li><strong>Compra:</strong> Registra la entrada de stock por compra a proveedor</li>
+                    <li><strong>Uso/Consumo:</strong> Registra la salida de stock por uso en mezclas</li>
+                    <li><strong>Desperdicio:</strong> Pérdidas por vencimiento, daño, etc. <span class="text-danger">Registra automáticamente un gasto financiero</span></li>
+                </ul>
+                <hr>
+                <p class="card-text small">
+                    <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> El inventario se actualiza automáticamente al guardar el movimiento.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Datos de items pasados desde Django
+const itemsData = {{ items_data_json|safe }};
+
+// Elementos del formulario
+const feedItemSelect = document.getElementById('{{ form.feed_item.id_for_label }}');
+const movementTypeSelect = document.getElementById('{{ form.movement_type.id_for_label }}');
+const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
+const unitCostInput = document.getElementById('{{ form.unit_cost_clp.id_for_label }}');
+const unitDisplay = document.getElementById('unit-display');
+const totalCostRow = document.getElementById('total-cost-row');
+const totalCostDisplay = document.getElementById('total-cost-display');
+const calculationDetail = document.getElementById('calculation-detail');
+const unitCostInfo = document.getElementById('unit-cost-info');
+
+// Función para actualizar la unidad mostrada
+function updateUnitDisplay() {
+    const selectedItemId = feedItemSelect.value;
+    if (selectedItemId && itemsData[selectedItemId]) {
+        const itemData = itemsData[selectedItemId];
+        unitDisplay.textContent = itemData.unit_type;
+        
+        // Auto-llenar costo unitario si es compra o desperdicio
+        if ((movementTypeSelect.value === 'purchase' || movementTypeSelect.value === 'waste') && !unitCostInput.value) {
+            unitCostInput.value = itemData.unit_cost.toFixed(2);
+        }
+        
+        unitCostInfo.innerHTML = `Precio registrado: $${itemData.unit_cost.toLocaleString('es-CL', {minimumFractionDigits: 0})} por ${itemData.unit_type}`;
+    } else {
+        unitDisplay.textContent = '-';
+        unitCostInfo.innerHTML = 'Se usa el precio registrado del item';
+    }
+    calculateTotalCost();
+}
+
+// Función para calcular el costo total
+function calculateTotalCost() {
+    const movementType = movementTypeSelect.value;
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const unitCost = parseFloat(unitCostInput.value) || 0;
+    
+    // Mostrar para compras y desperdicios
+    if ((movementType === 'purchase' || movementType === 'waste') && quantity > 0 && unitCost > 0) {
+        const totalCost = quantity * unitCost;
+        
+        // Cambiar el estilo según el tipo
+        const alertDiv = totalCostRow.querySelector('.alert');
+        const headingText = totalCostRow.querySelector('.alert-heading');
+        
+        if (movementType === 'waste') {
+            alertDiv.className = 'alert alert-danger';
+            headingText.textContent = '⚠️ Pérdida Total Calculada';
+        } else {
+            alertDiv.className = 'alert alert-success';
+            headingText.textContent = '💰 Costo Total Calculado';
+        }
+        
+        totalCostDisplay.textContent = `$${totalCost.toLocaleString('es-CL', {minimumFractionDigits: 0})}`;
+        calculationDetail.textContent = `${quantity} × $${unitCost.toLocaleString('es-CL', {minimumFractionDigits: 0})} = $${totalCost.toLocaleString('es-CL', {minimumFractionDigits: 0})}`;
+        totalCostRow.style.display = 'block';
+    } else {
+        totalCostRow.style.display = 'none';
+    }
+}
+
+// Event listeners
+feedItemSelect.addEventListener('change', updateUnitDisplay);
+movementTypeSelect.addEventListener('change', updateUnitDisplay);
+quantityInput.addEventListener('input', calculateTotalCost);
+unitCostInput.addEventListener('input', calculateTotalCost);
+
+// Inicializar al cargar
+updateUnitDisplay();
+</script>
+
+{% endblock %}

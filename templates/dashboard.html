@@ -1,0 +1,583 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+        <p class="text-muted">Resumen general de la operación</p>
+    </div>
+    <div class="col-auto">
+        <p class="text-muted mb-0">Última actualización:</p>
+        <p class="fw-bold">{{ current_date|date:"d/m/Y H:i" }}</p>
+    </div>
+</div>
+
+<!-- Daily Checklist -->
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-clipboard-check"></i> Checklist Diario - {{ current_date|date:"d/m/Y" }}
+            </h5>
+            <div>
+                <span class="badge bg-light text-primary">
+                    {{ completed_tasks }}/{{ total_tasks }} Completadas
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Progress Bar -->
+        <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <small class="text-muted">Progreso del día</small>
+                <small class="fw-bold">{{ completion_percentage|floatformat:0 }}%</small>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar {% if completion_percentage == 100 %}bg-success{% elif completion_percentage >= 50 %}bg-info{% else %}bg-warning{% endif %}" 
+                     role="progressbar" 
+                     style="width: {{ completion_percentage }}%">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Checklist Items -->
+        <div class="list-group list-group-flush">
+            {% for task in checklist %}
+            <div class="list-group-item d-flex align-items-center {% if task.completed %}bg-light{% endif %}">
+                <div class="form-check me-3">
+                    {% if task.completed %}
+                        <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                    {% else %}
+                        <i class="bi bi-circle text-muted fs-4"></i>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center">
+                        <i class="{{ task.icon }} me-2"></i>
+                        <strong {% if task.completed %}class="text-muted text-decoration-line-through"{% endif %}>
+                            {{ task.name }}
+                        </strong>
+                    </div>
+                    <small class="text-muted">{{ task.description }}</small>
+                </div>
+                <div class="btn-group" role="group">
+                    <!-- Botón de información -->
+                    <button type="button" class="btn btn-sm btn-outline-info" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#taskModal{{ forloop.counter }}">
+                        <i class="bi bi-info-circle"></i> Info
+                    </button>
+                    {% if not task.completed %}
+                        {% if can_write_production %}
+                        <!-- Botón de registrar (habilitado) -->
+                        <a href="{% url task.url %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Registrar
+                        </a>
+                        {% else %}
+                        <!-- Botón de registrar (deshabilitado para contador) -->
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-secondary" 
+                                disabled
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top"
+                                title="Solo Admin y Trabajadores pueden registrar datos de producción">
+                            <i class="bi bi-lock-fill"></i> Registrar
+                        </button>
+                        {% endif %}
+                    {% else %}
+                    <span class="badge bg-success ms-2 d-flex align-items-center">
+                        <i class="bi bi-check"></i> Completado
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if completion_percentage == 100 %}
+        <div class="alert alert-success mt-3 mb-0">
+            <i class="bi bi-trophy-fill"></i> 
+            <strong>¡Excelente!</strong> Todas las tareas del día están completadas.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Indicadores Productivos Clave -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-graph-up-arrow"></i> Indicadores Productivos Clave
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <!-- Producción del Día -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-egg-fried text-primary fs-1"></i>
+                    <h3 class="mt-2 mb-0">{{ indicadores_productivos.produccion_hoy|floatformat:0 }}</h3>
+                    <p class="text-muted mb-0 small">Huevos Producidos Hoy</p>
+                </div>
+            </div>
+            
+            <!-- Porcentaje de Postura -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-percent text-success fs-1"></i>
+                    <h3 class="mt-2 mb-0">{{ indicadores_productivos.porcentaje_postura }}%</h3>
+                    <p class="text-muted mb-0 small">Porcentaje de Postura</p>
+                    <small class="text-muted">({{ indicadores_productivos.gallinas_totales }} gallinas)</small>
+                </div>
+            </div>
+            
+            <!-- Consumo Semanal -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-basket text-warning fs-1"></i>
+                    <h3 class="mt-2 mb-0">{{ indicadores_productivos.consumo_semanal }} kg</h3>
+                    <p class="text-muted mb-0 small">Consumo de Alimento</p>
+                    <small class="text-muted">(últimos 7 días)</small>
+                </div>
+            </div>
+            
+            <!-- Conversión Alimenticia -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-calculator text-info fs-1"></i>
+                    <h3 class="mt-2 mb-0">{{ indicadores_productivos.conversion_alimenticia }}</h3>
+                    <p class="text-muted mb-0 small">Conversión Alimenticia</p>
+                    <small class="text-muted">(kg/docena)</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información adicional -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Producción Semanal:</strong> {{ indicadores_productivos.produccion_semanal|floatformat:0 }} huevos 
+                    ({{ indicadores_productivos.docenas_semanales }} docenas) en los últimos 7 días
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Indicadores Financieros -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-cash-stack"></i> Indicadores Financieros
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <!-- Ingresos del Mes -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-arrow-up-circle text-success fs-1"></i>
+                    <h4 class="mt-2 mb-0">${{ indicadores_financieros.ingresos_mes|floatformat:0 }}</h4>
+                    <p class="text-muted mb-0 small">Ingresos del Mes</p>
+                </div>
+            </div>
+            
+            <!-- Gastos del Mes -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-arrow-down-circle text-danger fs-1"></i>
+                    <h4 class="mt-2 mb-0">${{ indicadores_financieros.gastos_mes|floatformat:0 }}</h4>
+                    <p class="text-muted mb-0 small">Gastos del Mes</p>
+                </div>
+            </div>
+            
+            <!-- Balance del Mes -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded {% if indicadores_financieros.balance_mes >= 0 %}bg-success bg-opacity-10{% else %}bg-danger bg-opacity-10{% endif %}">
+                    <i class="bi bi-wallet2 {% if indicadores_financieros.balance_mes >= 0 %}text-success{% else %}text-danger{% endif %} fs-1"></i>
+                    <h4 class="mt-2 mb-0 {% if indicadores_financieros.balance_mes >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        ${{ indicadores_financieros.balance_mes|floatformat:0 }}
+                    </h4>
+                    <p class="text-muted mb-0 small">Balance del Mes</p>
+                </div>
+            </div>
+            
+            <!-- Balance Semanal -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-calendar-week text-info fs-1"></i>
+                    <h4 class="mt-2 mb-0 {% if indicadores_financieros.balance_semana >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        ${{ indicadores_financieros.balance_semana|floatformat:0 }}
+                    </h4>
+                    <p class="text-muted mb-0 small">Balance Semanal</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fila 2: Indicadores Adicionales -->
+        <div class="row g-3 mt-2">
+            <!-- Utilidad Operativa -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded {% if indicadores_financieros.utilidad_operativa >= 0 %}bg-success bg-opacity-10{% else %}bg-danger bg-opacity-10{% endif %}">
+                    <i class="bi bi-graph-up {% if indicadores_financieros.utilidad_operativa >= 0 %}text-success{% else %}text-danger{% endif %} fs-1"></i>
+                    <h4 class="mt-2 mb-0 {% if indicadores_financieros.utilidad_operativa >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        ${{ indicadores_financieros.utilidad_operativa|floatformat:0 }}
+                    </h4>
+                    <p class="text-muted mb-0 small">Utilidad Operativa</p>
+                    <small class="text-muted">(Ingresos - Egresos)</small>
+                </div>
+            </div>
+            
+            <!-- Margen Operativo -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-percent {% if indicadores_financieros.margen_operativo >= 0 %}text-success{% else %}text-danger{% endif %} fs-1"></i>
+                    <h4 class="mt-2 mb-0 {% if indicadores_financieros.margen_operativo >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ indicadores_financieros.margen_operativo }}%
+                    </h4>
+                    <p class="text-muted mb-0 small">Margen Operativo</p>
+                    <small class="text-muted">(Utilidad / Ingresos)</small>
+                </div>
+            </div>
+            
+            <!-- Costo Promedio por Huevo -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-light">
+                    <i class="bi bi-egg text-warning fs-1"></i>
+                    <h4 class="mt-2 mb-0 text-primary">
+                        ${{ indicadores_financieros.costo_promedio_huevo }}
+                    </h4>
+                    <p class="text-muted mb-0 small">Costo por Huevo</p>
+                    <small class="text-muted">({{ indicadores_financieros.produccion_mes|floatformat:0 }} huevos este mes)</small>
+                </div>
+            </div>
+            
+            <!-- Resumen del Mes -->
+            <div class="col-md-3">
+                <div class="text-center p-3 border rounded bg-info bg-opacity-10">
+                    <i class="bi bi-calendar-month text-info fs-1"></i>
+                    <h4 class="mt-2 mb-0 text-info">
+                        {{ current_date|date:"F Y" }}
+                    </h4>
+                    <p class="text-muted mb-0 small">Período Actual</p>
+                    <small class="text-muted">Indicadores del mes</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Acceso Rápido a Reportes -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="alert alert-primary d-flex align-items-center justify-content-between mb-0">
+                    <div>
+                        <i class="bi bi-file-earmark-bar-graph fs-4 me-2"></i>
+                        <strong>Resumen Financiero Mensual</strong>
+                        <p class="mb-0 small">Consulta y exporta reportes detallados en PDF o Excel</p>
+                    </div>
+                    <a href="{% url 'financial_summary' %}" class="btn btn-light">
+                        <i class="bi bi-arrow-right-circle"></i> Ver Reportes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="stat-label mb-2">Total Aves</p>
+                        <h2 class="stat-value text-info">{{ stats.total_birds|default:"0" }}</h2>
+                    </div>
+                    <i class="bi bi-egg-fried display-4 text-info opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="stat-label mb-2">Huevos Hoy</p>
+                        <h2 class="stat-value text-success">{{ stats.eggs_today|default:"0" }}</h2>
+                    </div>
+                    <i class="bi bi-basket display-4 text-success opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="stat-label mb-2">Mortalidad Mes</p>
+                        <h2 class="stat-value text-warning">{{ stats.mortality_month|default:"0" }}</h2>
+                    </div>
+                    <i class="bi bi-exclamation-triangle display-4 text-warning opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="stat-label mb-2">Balance Mes</p>
+                        <h2 class="stat-value text-primary">
+                            ${{ stats.balance_month|default:"0"|floatformat:0 }}
+                        </h2>
+                    </div>
+                    <i class="bi bi-currency-dollar display-4 text-primary opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Producción de Huevos (Últimos 7 días)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="eggProductionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Distribución por Tamaño</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="eggSizeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Actividad Reciente</h5>
+                <a href="{% url 'egg_production_list' %}" class="btn btn-sm btn-outline-primary">Ver Todo</a>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for production in recent_production %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ production.production_date|date:"d/m/Y" }}</h6>
+                            <small class="text-muted">
+                                {{ production.size_code|title }}: {{ production.quantity }} huevos
+                            </small>
+                        </div>
+                        <span class="badge bg-success">{{ production.quantity }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-3">No hay registros recientes</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Transacciones Recientes</h5>
+                <a href="{% url 'finance_transaction_list' %}" class="btn btn-sm btn-outline-primary">Ver Todo</a>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for transaction in recent_transactions %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ transaction.description|truncatewords:5 }}</h6>
+                            <small class="text-muted">{{ transaction.transaction_date|date:"d/m/Y" }}</small>
+                        </div>
+                        <span class="badge {% if transaction.category.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">
+                            ${{ transaction.amount_clp|floatformat:0 }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center py-3">No hay transacciones recientes</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Egg Production Chart
+const eggProductionCtx = document.getElementById('eggProductionChart').getContext('2d');
+new Chart(eggProductionCtx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            label: 'Pequeños',
+            data: {{ chart_small|safe }},
+            borderColor: '#ffc107',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Medianos',
+            data: {{ chart_medium|safe }},
+            borderColor: '#0dcaf0',
+            backgroundColor: 'rgba(13, 202, 240, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Grandes',
+            data: {{ chart_large|safe }},
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Egg Size Distribution Chart
+const eggSizeCtx = document.getElementById('eggSizeChart').getContext('2d');
+new Chart(eggSizeCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Pequeños', 'Medianos', 'Grandes'],
+        datasets: [{
+            data: {{ size_distribution|safe }},
+            backgroundColor: ['#ffc107', '#0dcaf0', '#198754']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Inicializar tooltips de Bootstrap
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+</script>
+
+<!-- Modales de Información del Checklist -->
+{% for task in checklist %}
+<div class="modal fade" id="taskModal{{ forloop.counter }}" tabindex="-1" aria-labelledby="taskModalLabel{{ forloop.counter }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="taskModalLabel{{ forloop.counter }}">
+                    <i class="{{ task.icon }} me-2"></i>{{ task.name }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 class="text-muted">Descripción:</h6>
+                    <p>{{ task.description }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted">Estado:</h6>
+                    {% if task.completed %}
+                        <span class="badge bg-success fs-6">
+                            <i class="bi bi-check-circle-fill"></i> Completado para hoy
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning fs-6">
+                            <i class="bi bi-exclamation-circle-fill"></i> Pendiente
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted">¿Qué hacer?</h6>
+                    {% if forloop.counter == 1 %}
+                        <p>Registra el conteo diario de aves en la granja:</p>
+                        <ul>
+                            <li>Cantidad de juveniles</li>
+                            <li>Cantidad de machos</li>
+                            <li>Cantidad de gallinas</li>
+                        </ul>
+                        <p class="text-muted small"><i class="bi bi-info-circle"></i> El total se calcula automáticamente.</p>
+                    {% elif forloop.counter == 2 %}
+                        <p>Registra la producción de huevos del día:</p>
+                        <ul>
+                            <li>Cantidad de huevos pequeños</li>
+                            <li>Cantidad de huevos medianos</li>
+                            <li>Cantidad de huevos grandes</li>
+                        </ul>
+                        <p class="text-muted small"><i class="bi bi-info-circle"></i> Debes crear un registro por cada tamaño.</p>
+                    {% elif forloop.counter == 3 %}
+                        <p>Registra el consumo de alimento del día:</p>
+                        <ul>
+                            <li>Selecciona la mezcla de alimento utilizada</li>
+                            <li>Ingresa los kilogramos consumidos</li>
+                        </ul>
+                        <p class="text-muted small"><i class="bi bi-info-circle"></i> Esto ayuda a calcular la conversión alimenticia.</p>
+                    {% endif %}
+                </div>
+                
+                {% if not task.completed %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-lightbulb-fill"></i> 
+                    <strong>Importante:</strong> Completa esta tarea para mantener el registro diario actualizado.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'form_base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block form_content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.event_date.label_tag }}
+            {{ form.event_date }}
+            {% if form.event_date.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.event_date.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.bird_type.label_tag }}
+            {{ form.bird_type }}
+            {% if form.bird_type.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.bird_type.errors }}
+            </div>
+            {% endif %}
+            <small class="form-text text-muted">
+                <i class="bi bi-info-circle"></i> Tipo de ave afectada
+            </small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.quantity.label_tag }}
+            {{ form.quantity }}
+            {% if form.quantity.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.quantity.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="mb-3">
+            {{ form.cause.label_tag }}
+            {{ form.cause }}
+            {% if form.cause.errors %}
+            <div class="invalid-feedback d-block">
+                {{ form.cause.errors }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    {{ form.notes.label_tag }}
+    {{ form.notes }}
+    {% if form.notes.errors %}
+    <div class="invalid-feedback d-block">
+        {{ form.notes.errors }}
+    </div>
+    {% endif %}
+    <small class="form-text text-muted">Detalles adicionales (opcional)</small>
+</div>
+{% endblock %}

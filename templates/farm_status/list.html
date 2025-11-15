@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Estado de Granja - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-clipboard-data"></i> Estado de Granja
+        </h1>
+        <p class="text-muted">Registro diario del estado de las aves</p>
+    </div>
+    <div class="col-auto">
+        {% if can_write_production %}
+        <a href="{% url 'farm_status_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Registro
+        </a>
+        {% else %}
+        <span class="badge bg-secondary">
+            <i class="bi bi-eye"></i> Solo lectura
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th class="text-center">Juveniles</th>
+                        <th class="text-center">Machos</th>
+                        <th class="text-center">Gallinas</th>
+                        <th class="text-center">Total Aves</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for status in farm_statuses %}
+                    <tr>
+                        <td>{{ status.status_date|date:"d/m/Y" }}</td>
+                        <td class="text-center">{{ status.juveniles_count }}</td>
+                        <td class="text-center">{{ status.males_count }}</td>
+                        <td class="text-center">{{ status.hens_count }}</td>
+                        <td class="text-center fw-bold">{{ status.total_birds }}</td>
+                        <td class="text-center">
+                            {% if can_write_production %}
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'farm_status_edit' status.pk %}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'farm_status_delete' status.pk %}" 
+                                   class="btn btn-outline-danger" title="Eliminar"
+                                   onclick="return confirm('¿Eliminar este registro?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No hay registros
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if farm_statuses.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if farm_statuses.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ farm_statuses.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ farm_statuses.number }} de {{ farm_statuses.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if farm_statuses.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ farm_statuses.next_page_number }}">Siguiente</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

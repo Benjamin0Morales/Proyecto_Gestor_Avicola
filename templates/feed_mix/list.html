@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Mezclas de Alimento - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-shuffle"></i> Mezclas de Alimento
+        </h1>
+        <p class="text-muted">Registro de mezclas preparadas</p>
+    </div>
+    <div class="col-auto">
+        {% if can_write_production %}
+        <a href="{% url 'feed_mix_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva Mezcla
+        </a>
+        {% else %}
+        <span class="badge bg-secondary">
+            <i class="bi bi-eye"></i> Solo lectura
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle"></i> 
+    <strong>Registro de Mezclas:</strong> Este es un registro histórico de todas las mezclas creadas. 
+    Para eliminar una mezcla del inventario, usa la opción de <strong>"Desperdicio"</strong> en Inventario de Alimentos.
+    {% if user.role != 'admin' %}
+    <br><small class="text-muted">Solo administradores pueden eliminar registros de mezclas.</small>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Peso Total (kg)</th>
+                        <th>Creado Por</th>
+                        <th>Fecha Creación</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mix in mixes %}
+                    <tr>
+                        <td>{{ mix.mix_date|date:"d/m/Y" }}</td>
+                        <td>{{ mix.description|truncatewords:10|default:"-" }}</td>
+                        <td class="text-end fw-bold">{{ mix.total_weight_kg|floatformat:2 }}</td>
+                        <td>
+                            {% if mix.created_by %}
+                                <i class="bi bi-person-circle"></i> Usuario #{{ mix.created_by }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ mix.created_at|date:"d/m/Y H:i" }}
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'feed_mix_edit' mix.pk %}" 
+                               class="btn btn-outline-primary btn-sm" title="Ver Detalle">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                            {% if user.role == 'admin' %}
+                            <a href="{% url 'feed_mix_delete' mix.pk %}" 
+                               class="btn btn-outline-danger btn-sm" title="Eliminar (Solo Admin)"
+                               onclick="return confirm('⚠️ ADMIN: ¿Eliminar esta mezcla del registro? Esta acción no se puede deshacer.')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No hay mezclas registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if mixes.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if mixes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ mixes.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ mixes.number }} de {{ mixes.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if mixes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ mixes.next_page_number }}">Siguiente</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

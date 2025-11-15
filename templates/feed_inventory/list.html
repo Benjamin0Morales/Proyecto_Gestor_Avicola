@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventario de Alimentos - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-box-seam-fill"></i> Inventario de Alimentos
+        </h1>
+        <p class="text-muted">Stock actual de items de alimento</p>
+    </div>
+    <div class="col-auto">
+        {% if can_write_production %}
+        <a href="{% url 'feed_inventory_movement_create' %}" class="btn btn-success me-2">
+            <i class="bi bi-plus-circle"></i> Registrar Movimiento
+        </a>
+        <a href="{% url 'feed_inventory_movements' %}" class="btn btn-outline-primary">
+            <i class="bi bi-clock-history"></i> Historial
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Proveedor</th>
+                        <th class="text-end">Stock Actual</th>
+                        <th>Unidad</th>
+                        <th class="text-end">Costo Unitario</th>
+                        <th>Estado</th>
+                        <th>Última Actualización</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="fw-bold">{{ item.item_name }}</td>
+                        <td>{{ item.supplier_name|default:"-" }}</td>
+                        <td class="text-end">
+                            {% if item.inventory %}
+                                <span class="fs-5 {% if item.inventory.quantity < 10 %}text-danger{% elif item.inventory.quantity < 50 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ item.inventory.quantity|floatformat:2 }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">0.00</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.get_unit_type_display }}</td>
+                        <td class="text-end">${{ item.unit_cost_clp|floatformat:0 }}</td>
+                        <td>
+                            {% if item.inventory %}
+                                {% if item.inventory.quantity == 0 %}
+                                    <span class="badge bg-danger">Sin Stock</span>
+                                {% elif item.inventory.quantity < 10 %}
+                                    <span class="badge bg-warning">Stock Bajo</span>
+                                {% elif item.inventory.quantity < 50 %}
+                                    <span class="badge bg-info">Stock Medio</span>
+                                {% else %}
+                                    <span class="badge bg-success">Stock OK</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Sin Inventario</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.inventory %}
+                                {{ item.inventory.last_updated|date:"d/m/Y H:i" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No hay items de alimento registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen de Stock -->
+<div class="row g-4 mt-4">
+    <div class="col-md-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
+                <h3 class="mt-2">{{ items|length }}</h3>
+                <p class="text-muted mb-0">Items Totales</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle-fill text-danger fs-1"></i>
+                <h3 class="mt-2">
+                    {% with zero_stock=0 %}
+                        {% for item in items %}
+                            {% if item.inventory and item.inventory.quantity == 0 %}
+                                {% with zero_stock=zero_stock|add:1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ zero_stock }}
+                    {% endwith %}
+                </h3>
+                <p class="text-muted mb-0">Sin Stock</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-circle-fill text-warning fs-1"></i>
+                <h3 class="mt-2">
+                    {% with low_stock=0 %}
+                        {% for item in items %}
+                            {% if item.inventory and item.inventory.quantity > 0 and item.inventory.quantity < 10 %}
+                                {% with low_stock=low_stock|add:1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ low_stock }}
+                    {% endwith %}
+                </h3>
+                <p class="text-muted mb-0">Stock Bajo</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                <h3 class="mt-2">
+                    {% with ok_stock=0 %}
+                        {% for item in items %}
+                            {% if item.inventory and item.inventory.quantity >= 50 %}
+                                {% with ok_stock=ok_stock|add:1 %}{% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ ok_stock }}
+                    {% endwith %}
+                </h3>
+                <p class="text-muted mb-0">Stock OK</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

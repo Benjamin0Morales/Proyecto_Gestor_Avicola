@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Eventos de Mortalidad - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-exclamation-triangle"></i> Eventos de Mortalidad
+        </h1>
+        <p class="text-muted">Registro de mortalidad de aves</p>
+    </div>
+    <div class="col-auto">
+        {% if can_write_production %}
+        <a href="{% url 'mortality_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Evento
+        </a>
+        {% else %}
+        <span class="badge bg-secondary">
+            <i class="bi bi-eye"></i> Solo lectura
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo de Ave</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Causa</th>
+                        <th>Notas</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.event_date|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if event.bird_type == 'juvenile' %}
+                                <span class="badge bg-warning">Juvenil</span>
+                            {% elif event.bird_type == 'male' %}
+                                <span class="badge bg-info">Macho</span>
+                            {% else %}
+                                <span class="badge bg-danger">Gallina</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold text-danger">{{ event.quantity }}</td>
+                        <td>{{ event.cause|truncatewords:5 }}</td>
+                        <td>{{ event.notes|truncatewords:5|default:"-" }}</td>
+                        <td class="text-center">
+                            {% if can_write_production %}
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'mortality_edit' event.pk %}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'mortality_delete' event.pk %}" 
+                                   class="btn btn-outline-danger" title="Eliminar"
+                                   onclick="return confirm('¿Eliminar este evento?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No hay eventos de mortalidad registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if events.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if events.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ events.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ events.number }} de {{ events.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if events.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ events.next_page_number }}">Siguiente</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

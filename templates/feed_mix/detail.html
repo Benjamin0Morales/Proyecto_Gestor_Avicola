@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi {{ icon }}"></i> {{ title }}
+        </h1>
+        <p class="text-muted">Información de la mezcla creada</p>
+    </div>
+    <div class="col-auto">
+        <a href="{% url cancel_url %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información General</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Fecha:</dt>
+                    <dd class="col-sm-7">{{ mix.mix_date|date:"d/m/Y" }}</dd>
+                    
+                    <dt class="col-sm-5">Descripción:</dt>
+                    <dd class="col-sm-7">{{ mix.description|default:"-" }}</dd>
+                    
+                    <dt class="col-sm-5">Peso Total:</dt>
+                    <dd class="col-sm-7"><strong>{{ mix.total_weight_kg|floatformat:2 }} kg</strong></dd>
+                </dl>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Auditoría</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Creado por:</dt>
+                    <dd class="col-sm-7">
+                        {% if mix.created_by %}
+                            <i class="bi bi-person-circle"></i> Usuario #{{ mix.created_by }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-5">Fecha creación:</dt>
+                    <dd class="col-sm-7">{{ mix.created_at|date:"d/m/Y H:i" }}</dd>
+                    
+                    {% if mix.updated_by %}
+                    <dt class="col-sm-5">Modificado por:</dt>
+                    <dd class="col-sm-7">
+                        <i class="bi bi-person-circle"></i> Usuario #{{ mix.updated_by }}
+                    </dd>
+                    
+                    <dt class="col-sm-5">Última modificación:</dt>
+                    <dd class="col-sm-7">{{ mix.updated_at|date:"d/m/Y H:i" }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-list-check"></i> Composición de la Mezcla</h5>
+            </div>
+            <div class="card-body">
+                {% if mix_items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-end">Cantidad (kg)</th>
+                                <th class="text-end">Proporción (%)</th>
+                                <th class="text-end">Costo Unit.</th>
+                                <th class="text-end">Costo Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in mix_items %}
+                            <tr>
+                                <td class="fw-bold">{{ item.feed_item.item_name }}</td>
+                                <td class="text-end">{{ item.weight_kg|floatformat:2 }}</td>
+                                <td class="text-end">{{ item.proportion_pct|floatformat:1 }}%</td>
+                                <td class="text-end">${{ item.feed_item.unit_cost_clp|floatformat:0 }}</td>
+                                <td class="text-end">
+                                    {% widthratio item.feed_item.unit_cost_clp 1 item.weight_kg as total_cost %}
+                                    ${{ total_cost|floatformat:0 }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <th>TOTAL</th>
+                                <th class="text-end">{{ mix.total_weight_kg|floatformat:2 }} kg</th>
+                                <th class="text-end">100%</th>
+                                <th></th>
+                                <th class="text-end">
+                                    {% with total=0 %}
+                                        {% for item in mix_items %}
+                                            {% widthratio item.feed_item.unit_cost_clp 1 item.weight_kg as item_cost %}
+                                            {% widthratio total 1 1 as current_total %}
+                                            {% widthratio current_total 1 1 as temp %}
+                                            {% widthratio temp|add:item_cost 1 1 as total %}
+                                        {% endfor %}
+                                        ${{ total|floatformat:0 }}
+                                    {% endwith %}
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> No hay items registrados en esta mezcla.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-4">
+            <i class="bi bi-info-circle"></i> 
+            <strong>Nota:</strong> Este es un registro histórico. Para eliminar esta mezcla del inventario, 
+            ve a <strong>Inventario de Alimentos</strong> y registra un movimiento de tipo <strong>"Desperdicio"</strong>.
+        </div>
+    </div>
+</div>
+
+{% endblock %}

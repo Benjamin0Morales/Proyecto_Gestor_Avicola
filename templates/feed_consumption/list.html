@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Consumo de Alimento - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-graph-down"></i> Consumo de Alimento
+        </h1>
+        <p class="text-muted">Registro diario de consumo</p>
+    </div>
+    <div class="col-auto">
+        {% if can_write_production %}
+        <a href="{% url 'feed_consumption_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Registro
+        </a>
+        {% else %}
+        <span class="badge bg-secondary">
+            <i class="bi bi-eye"></i> Solo lectura
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Mezcla</th>
+                        <th class="text-end">Consumido (kg)</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for consumption in consumptions %}
+                    <tr>
+                        <td>{{ consumption.consumption_date|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if consumption.feed_mix %}
+                                {{ consumption.feed_mix.mix_date|date:"d/m/Y" }}
+                                {% if consumption.feed_mix.description %}
+                                    - {{ consumption.feed_mix.description|truncatewords:5 }}
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">Sin mezcla</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end fw-bold">{{ consumption.total_consumed_kg|floatformat:2 }}</td>
+                        <td class="text-center">
+                            {% if can_write_production %}
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'feed_consumption_edit' consumption.pk %}" 
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'feed_consumption_delete' consumption.pk %}" 
+                                   class="btn btn-outline-danger" title="Eliminar"
+                                   onclick="return confirm('¿Eliminar este registro?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <span class="text-muted small">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No hay registros de consumo
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if consumptions.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if consumptions.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ consumptions.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ consumptions.number }} de {{ consumptions.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if consumptions.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ consumptions.next_page_number }}">Siguiente</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
