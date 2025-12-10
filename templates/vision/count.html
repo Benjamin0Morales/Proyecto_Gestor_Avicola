@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Conteo Automático con Visión - Avícola Eugenio{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-camera-fill"></i> Conteo Automático con Visión
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Instrucciones -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-info-circle-fill"></i> Instrucciones para Mejores Resultados
+                    </h6>
+                    <ul class="mb-0 mt-2">
+                        <li>Toma una foto clara de los huevos sobre fondo contrastante</li>
+                        <li>Asegúrate de tener buena iluminación uniforme</li>
+                        <li>Los huevos deben estar separados (no apilados)</li>
+                        <li>Formato: JPG o PNG (máximo 5MB)</li>
+                        <li>Vista desde arriba funciona mejor</li>
+                    </ul>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="visionForm">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <!-- Fecha -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                Fecha de Producción <span class="text-danger">*</span>
+                            </label>
+                            {{ form.production_date }}
+                            {% if form.production_date.help_text %}
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle"></i> {{ form.production_date.help_text }}
+                            </small>
+                            {% endif %}
+                            {% if form.production_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.production_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tamaño -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                Tamaño de Huevos <span class="text-danger">*</span>
+                            </label>
+                            {{ form.size_code }}
+                            {% if form.size_code.help_text %}
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle"></i> {{ form.size_code.help_text }}
+                            </small>
+                            {% endif %}
+                            {% if form.size_code.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.size_code.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Imagen -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Imagen de Huevos <span class="text-danger">*</span>
+                        </label>
+                        {{ form.image }}
+                        {% if form.image.help_text %}
+                        <small class="form-text text-muted">
+                            <i class="bi bi-info-circle"></i> {{ form.image.help_text }}
+                        </small>
+                        {% endif %}
+                        {% if form.image.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.image.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Vista previa -->
+                    <div class="mb-3" id="previewContainer" style="display:none;">
+                        <label class="form-label fw-semibold">Vista Previa:</label>
+                        <div class="border rounded p-2 bg-light text-center">
+                            <img id="imagePreview" class="img-fluid rounded" style="max-height: 400px;">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'egg_production_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg" id="processBtn">
+                            <i class="bi bi-cpu-fill"></i> Procesar Imagen
+                            <span class="spinner-border spinner-border-sm d-none ms-2" id="spinner"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ayuda adicional -->
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="bi bi-lightbulb-fill"></i>
+                <strong>Tip:</strong> El sistema detecta huevos mediante reconocimiento de formas circulares.
+                Podrás revisar y corregir el conteo antes de guardarlo.
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Vista previa de imagen
+    document.getElementById('id_image').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('previewContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Mostrar spinner al procesar
+    document.getElementById('visionForm').addEventListener('submit', function () {
+        const btn = document.getElementById('processBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-cpu-fill"></i> Procesando... <span class="spinner-border spinner-border-sm ms-2"></span>';
+    });
+</script>
+{% endblock %}

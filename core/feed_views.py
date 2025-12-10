@@ -127,11 +127,15 @@ def feed_mix_create(request):
             for item in available_items:
                 # Obtener cantidad del POST
                 quantity_key = f'item_{item.pk}_quantity'
-                quantity = request.POST.get(quantity_key, '0')
+                quantity_str = request.POST.get(quantity_key, '0').strip()
+                
+                # Validar que no esté vacío y sea un número válido
+                if not quantity_str or quantity_str == '':
+                    continue
                 
                 try:
-                    from decimal import Decimal
-                    quantity = Decimal(str(quantity))
+                    from decimal import Decimal, InvalidOperation
+                    quantity = Decimal(quantity_str)
                     if quantity > 0:
                         # Verificar stock disponible
                         if item.inventory.quantity >= quantity:
@@ -165,19 +169,22 @@ def feed_mix_create(request):
                             items_added += 1
                         else:
                             messages.warning(request, f'Stock insuficiente de {item.item_name}. Disponible: {item.inventory.quantity} kg')
-                except (ValueError, AttributeError, TypeError):
+                except (ValueError, AttributeError, TypeError, InvalidOperation):
+                    # Ignorar valores inválidos silenciosamente
                     pass
             
             # Actualizar peso total y proporciones
             if total_weight > 0:
+                from decimal import Decimal
                 mix.total_weight_kg = total_weight
                 mix.save()
                 
                 # Calcular proporciones
                 from core.models import FeedMixItem
                 mix_items = FeedMixItem.objects.filter(feed_mix=mix)
+                total_weight_decimal = Decimal(str(total_weight))
                 for mix_item in mix_items:
-                    mix_item.proportion_pct = (mix_item.weight_kg / total_weight) * 100
+                    mix_item.proportion_pct = (mix_item.weight_kg / total_weight_decimal) * 100
                     mix_item.save()
                 
                 # Crear item de mezcla en el catálogo si no existe

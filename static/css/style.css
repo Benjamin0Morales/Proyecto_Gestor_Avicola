@@ -17,13 +17,13 @@ body {
 .card {
     border: none;
     border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
 }
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-header {
@@ -94,18 +94,20 @@ body {
     font-weight: 500;
 }
 
-.btn-group-sm > .btn {
+.btn-group-sm>.btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
 }
 
 /* Forms */
-.form-control, .form-select {
+.form-control,
+.form-select {
     border-radius: 6px;
     border: 1px solid #ced4da;
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
@@ -130,7 +132,7 @@ body {
 }
 
 .navbar-dark .navbar-nav .nav-link {
-    color: rgba(255,255,255,0.9);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .navbar-dark .navbar-nav .nav-link:hover {
@@ -141,7 +143,7 @@ body {
 .dropdown-menu {
     border-radius: 8px;
     border: none;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .dropdown-item {
@@ -176,7 +178,7 @@ body {
     .stat-value {
         font-size: 1.5rem;
     }
-    
+
     .table {
         font-size: 0.875rem;
     }

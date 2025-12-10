@@ -154,7 +154,16 @@ class UserEditForm(forms.ModelForm):
 
 
 class FarmStatusForm(forms.ModelForm):
-    """Form for FarmStatus model."""
+    """Form for FarmStatus model with date protection."""
+    
+    # Checkbox solo para admin para permitir editar fecha
+    allow_date_edit = forms.BooleanField(
+        required=False,
+        initial=False,
+        label='Permitir editar fecha',
+        help_text='Solo administradores pueden modificar la fecha del registro',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
     
     class Meta:
         model = FarmStatus
@@ -166,15 +175,18 @@ class FarmStatusForm(forms.ModelForm):
             }),
             'juveniles_count': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '0'
+                'min': '0',
+                'step': '1'
             }),
             'males_count': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '0'
+                'min': '0',
+                'step': '1'
             }),
             'hens_count': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '0'
+                'min': '0',
+                'step': '1'
             }),
         }
         labels = {
@@ -183,6 +195,52 @@ class FarmStatusForm(forms.ModelForm):
             'males_count': 'Machos',
             'hens_count': 'Gallinas',
         }
+    
+    def __init__(self, *args, **kwargs):
+        # Extraer parámetros personalizados
+        self.user_role = kwargs.pop('user_role', None)
+        self.is_edit = kwargs.pop('is_edit', False)
+        
+        super().__init__(*args, **kwargs)
+        
+        # Si es edición, proteger el campo fecha
+        if self.is_edit:
+            # Por defecto, fecha es readonly
+            self.fields['status_date'].widget.attrs['readonly'] = True
+            self.fields['status_date'].widget.attrs['class'] += ' bg-light'
+            
+            # Asegurar que el valor de la fecha se muestre correctamente
+            if self.instance and self.instance.pk and self.instance.status_date:
+                # Formatear la fecha para el input type="date" (YYYY-MM-DD)
+                self.initial['status_date'] = self.instance.status_date.strftime('%Y-%m-%d')
+            
+            # Si NO es admin, ocultar el checkbox y asegurar que fecha no se puede editar
+            if self.user_role != 'admin':
+                self.fields['allow_date_edit'].widget = forms.HiddenInput()
+                self.fields['status_date'].disabled = True
+            else:
+                # Admin puede ver el checkbox
+                self.fields['allow_date_edit'].widget.attrs['id'] = 'allowDateEdit'
+        else:
+            # En creación, no mostrar el checkbox
+            self.fields['allow_date_edit'].widget = forms.HiddenInput()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Si es edición y no es admin, restaurar la fecha original
+        if self.is_edit and self.user_role != 'admin':
+            if self.instance and self.instance.pk:
+                cleaned_data['status_date'] = self.instance.status_date
+        
+        # Si es admin pero no marcó el checkbox, restaurar fecha original
+        if self.is_edit and self.user_role == 'admin':
+            allow_edit = cleaned_data.get('allow_date_edit', False)
+            if not allow_edit and self.instance and self.instance.pk:
+                cleaned_data['status_date'] = self.instance.status_date
+        
+        return cleaned_data
+
 
 
 class EggProductionForm(forms.ModelForm):
@@ -199,7 +257,8 @@ class EggProductionForm(forms.ModelForm):
             'size_code': forms.Select(attrs={'class': 'form-select'}),
             'quantity': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '0'
+                'min': '0',
+                'step': '1'
             }),
             'source_method': forms.Select(attrs={'class': 'form-select'}),
             'is_validated': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -211,6 +270,48 @@ class EggProductionForm(forms.ModelForm):
             'source_method': 'Método de Origen',
             'is_validated': 'Validado',
         }
+
+
+class VisionCountForm(forms.Form):
+    """Formulario para conteo automático de huevos con visión."""
+    
+    production_date = forms.DateField(
+        label='Fecha de Producción',
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control'
+        }),
+        help_text='Fecha del registro de producción'
+    )
+    
+    size_code = forms.ChoiceField(
+        label='Tamaño de Huevos',
+        choices=EggProduction.SIZE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text='Selecciona el tamaño de los huevos en la imagen'
+    )
+    
+    image = forms.ImageField(
+        label='Imagen de Huevos',
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*'
+        }),
+        help_text='Sube una imagen clara de los huevos (JPG, PNG, máx 5MB)'
+    )
+    
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if image:
+            # Validar tamaño (5MB máximo)
+            if image.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('La imagen no debe superar 5MB')
+            
+            # Validar formato
+            if not image.content_type in ['image/jpeg', 'image/png', 'image/jpg']:
+                raise forms.ValidationError('Solo se permiten imágenes JPG o PNG')
+        
+        return image
 
 
 class MortalityEventForm(forms.ModelForm):
@@ -227,7 +328,8 @@ class MortalityEventForm(forms.ModelForm):
             'bird_type': forms.Select(attrs={'class': 'form-select'}),
             'quantity': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '1'
+                'min': '1',
+                'step': '1'
             }),
             'cause': forms.TextInput(attrs={
                 'class': 'form-control',

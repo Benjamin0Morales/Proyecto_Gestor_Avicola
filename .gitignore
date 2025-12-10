@@ -19,8 +19,10 @@ media/
 staticfiles/
 logs/
 
-# Environment
+# Environment & Credentials
 .env
+*.env
+.env.*
 
 # IDE
 .vscode/
@@ -32,3 +34,22 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Proyecto Específico
+# Modelos de ML (muy grandes para GitHub)
+*.pt
+*.onnx
+models/
+
+# Nginx (archivos de configuración local)
+nginx/
+nginx.zip
+
+# Scripts de sistema local
+*.bat
+
+# Resultados de pruebas
+test_results/
+
+# Migraciones temporales (mantener solo 0001_initial.py)
+migrations/

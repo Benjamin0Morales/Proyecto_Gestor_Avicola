@@ -1,3 +1,128 @@
 {% extends 'form_base.html' %}
 
-{% block title %}{{ title }} - Avícola Eugenio{% endblock %}
+{% block form_content %}
+<!-- Alerta de protección de fecha (solo en edición) -->
+{% if is_edit %}
+<div class="alert alert-info d-flex align-items-center" role="alert">
+    <i class="bi bi-shield-lock-fill fs-4 me-3"></i>
+    <div>
+        <strong>Protección de Fecha:</strong>
+        {% if user_role == 'admin' %}
+        La fecha está bloqueada por seguridad. Para modificarla, marca el checkbox "Permitir editar fecha" más abajo.
+        {% else %}
+        La fecha no puede ser modificada. Solo puedes editar las cantidades de aves.
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Campos del formulario -->
+{% for field in form %}
+{% if field.name == 'allow_date_edit' %}
+<!-- Checkbox para admin (solo en edición) -->
+{% if is_edit and user_role == 'admin' %}
+<div class="mb-4 p-4 bg-warning bg-opacity-10 border border-warning border-2 rounded-3">
+    <div class="form-check form-switch">
+        {{ field }}
+        <label class="form-check-label fw-bold fs-5" for="{{ field.id_for_label }}">
+            <i class="bi bi-unlock-fill text-warning me-2"></i> {{ field.label }}
+        </label>
+    </div>
+    {% if field.help_text %}
+    <small class="form-text text-muted d-block mt-2 ms-5">
+        <i class="bi bi-info-circle"></i> {{ field.help_text }}
+    </small>
+    {% endif %}
+</div>
+{% endif %}
+{% else %}
+<!-- Campos normales -->
+<div class="mb-3">
+    <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+        {{ field.label }}
+        {% if field.field.required %}
+        <span class="text-danger" title="Campo requerido">*</span>
+        {% endif %}
+
+        <!-- Indicador de campo protegido -->
+        {% if field.name == 'status_date' and is_edit %}
+        <span class="badge bg-secondary ms-2">
+            <i class="bi bi-lock-fill"></i> Bloqueado
+        </span>
+        {% endif %}
+    </label>
+
+    {{ field }}
+
+    <!-- Mostrar fecha actual como referencia -->
+    {% if field.name == 'status_date' and is_edit and field.value %}
+    <small class="form-text text-muted d-block mt-1">
+        <i class="bi bi-calendar-check"></i>
+        Fecha actual del registro: <strong>{{ field.value|date:"d/m/Y" }}</strong>
+    </small>
+    {% endif %}
+
+    {% if field.help_text %}
+    <small class="form-text text-muted">
+        <i class="bi bi-info-circle"></i> {{ field.help_text }}
+    </small>
+    {% endif %}
+
+    {% if field.errors %}
+    <div class="invalid-feedback d-block">
+        <i class="bi bi-exclamation-circle"></i>
+        {{ field.errors }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const allowDateEditCheckbox = document.getElementById('allowDateEdit');
+        const dateField = document.getElementById('id_status_date');
+
+        if (allowDateEditCheckbox && dateField) {
+            // Función para actualizar el estado del campo fecha
+            function updateDateField() {
+                if (allowDateEditCheckbox.checked) {
+                    // Habilitar edición
+                    dateField.removeAttribute('readonly');
+                    dateField.classList.remove('bg-light');
+                    dateField.classList.add('border-warning', 'border-3');
+                    dateField.focus();
+
+                    // Actualizar badge
+                    const badge = document.querySelector('.badge.bg-secondary');
+                    if (badge) {
+                        badge.className = 'badge bg-warning text-dark ms-2';
+                        badge.innerHTML = '<i class="bi bi-unlock-fill"></i> Desbloqueado';
+                    }
+                } else {
+                    // Deshabilitar edición
+                    dateField.setAttribute('readonly', true);
+                    dateField.classList.add('bg-light');
+                    dateField.classList.remove('border-warning', 'border-3');
+
+                    // Restaurar badge
+                    const badge = document.querySelector('.badge.bg-warning');
+                    if (badge) {
+                        badge.className = 'badge bg-secondary ms-2';
+                        badge.innerHTML = '<i class="bi bi-lock-fill"></i> Bloqueado';
+                    }
+                }
+            }
+
+            // Escuchar cambios en el checkbox
+            allowDateEditCheckbox.addEventListener('change', updateDateField);
+
+            // Estado inicial
+            updateDateField();
+        }
+    });
+</script>
+{% endblock %}

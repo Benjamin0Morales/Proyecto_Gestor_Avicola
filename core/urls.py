@@ -3,7 +3,7 @@ URL configuration for core web views.
 Vistas organizadas por módulos para mejor mantenibilidad.
 """
 from django.urls import path
-from core import production_views, feed_views, finance_views, report_views, user_views
+from core import production_views, feed_views, finance_views, report_views, user_views, vision_views
 
 urlpatterns = [
     # Users (Admin only)
@@ -28,6 +28,11 @@ urlpatterns = [
     path('egg-production/create/', production_views.egg_production_create, name='egg_production_create'),
     path('egg-production/<int:pk>/edit/', production_views.egg_production_edit, name='egg_production_edit'),
     path('egg-production/<int:pk>/delete/', production_views.egg_production_delete, name='egg_production_delete'),
+    
+    # Vision Module (Computer Vision for Egg Counting)
+    path('vision/count/', vision_views.vision_count_eggs, name='vision_count_eggs'),
+    path('vision/confirm/', vision_views.vision_confirm, name='vision_confirm'),
+    path('vision/cancel/', vision_views.vision_cancel, name='vision_cancel'),
     
     # Mortality Events
     path('mortality/', production_views.mortality_list, name='mortality_list'),

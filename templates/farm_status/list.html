@@ -3,103 +3,212 @@
 {% block title %}Estado de Granja - Avícola Eugenio{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
+<!-- Header con título y acción principal -->
+<div class="row mb-4 align-items-center">
     <div class="col">
-        <h1 class="display-6 fw-bold">
-            <i class="bi bi-clipboard-data"></i> Estado de Granja
+        <h1 class="display-6 fw-bold mb-1">
+            <i class="bi bi-clipboard-data text-primary"></i> Estado de Granja
         </h1>
-        <p class="text-muted">Registro diario del estado de las aves</p>
+        <p class="text-muted mb-0">
+            <i class="bi bi-calendar-check"></i> Registro diario del estado de las aves
+        </p>
     </div>
     <div class="col-auto">
         {% if can_write_production %}
-        <a href="{% url 'farm_status_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Nuevo Registro
+        <a href="{% url 'farm_status_create' %}" class="btn btn-primary btn-lg shadow-sm">
+            <i class="bi bi-plus-circle"></i> Registrar Estado de Granja
         </a>
         {% else %}
-        <span class="badge bg-secondary">
+        <div class="alert alert-secondary mb-0 py-2 px-3">
             <i class="bi bi-eye"></i> Solo lectura
-        </span>
+        </div>
         {% endif %}
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
+<!-- Tarjeta de resumen (si hay datos) -->
+{% if farm_statuses %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-light border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="row text-center">
+                    <div class="col">
+                        <small class="text-muted d-block">Total de Registros</small>
+                        <strong class="fs-5">{{ farm_statuses.paginator.count }}</strong>
+                    </div>
+                    <div class="col">
+                        <small class="text-muted d-block">Último Registro</small>
+                        <strong class="fs-5">{{ farm_statuses.0.status_date|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="col">
+                        <small class="text-muted d-block">Total Aves Actual</small>
+                        <strong class="fs-5 text-primary">{{ farm_statuses.0.total_birds }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabla de registros -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-table"></i> Historial de Registros
+            </h5>
+            <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Mostrando {{ farm_statuses|length }} registros
+            </small>
+        </div>
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th>Fecha</th>
-                        <th class="text-center">Juveniles</th>
-                        <th class="text-center">Machos</th>
-                        <th class="text-center">Gallinas</th>
-                        <th class="text-center">Total Aves</th>
-                        <th class="text-center">Acciones</th>
+                        <th class="ps-4">
+                            <i class="bi bi-calendar3"></i> Fecha
+                        </th>
+                        <th class="text-center">
+                            <i class="bi bi-egg"></i> Juveniles
+                        </th>
+                        <th class="text-center">
+                            <i class="bi bi-gender-male"></i> Machos
+                        </th>
+                        <th class="text-center">
+                            <i class="bi bi-gender-female"></i> Gallinas
+                        </th>
+                        <th class="text-center">
+                            <i class="bi bi-calculator"></i> Total Aves
+                        </th>
+                        <th class="text-center pe-4">
+                            <i class="bi bi-gear"></i> Acciones
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for status in farm_statuses %}
                     <tr>
-                        <td>{{ status.status_date|date:"d/m/Y" }}</td>
-                        <td class="text-center">{{ status.juveniles_count }}</td>
-                        <td class="text-center">{{ status.males_count }}</td>
-                        <td class="text-center">{{ status.hens_count }}</td>
-                        <td class="text-center fw-bold">{{ status.total_birds }}</td>
+                        <td class="ps-4 fw-semibold">
+                            {{ status.status_date|date:"d/m/Y" }}
+                            {% if forloop.first %}
+                            <span class="badge bg-success ms-2">Más reciente</span>
+                            {% endif %}
+                        </td>
                         <td class="text-center">
+                            <span class="badge bg-info">{{ status.juveniles_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary">{{ status.males_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-warning text-dark">{{ status.hens_count }}</span>
+                        </td>
+                        <td class="text-center">
+                            <strong class="text-primary fs-5">{{ status.total_birds }}</strong>
+                        </td>
+                        <td class="text-center pe-4">
                             {% if can_write_production %}
-                            <div class="btn-group btn-group-sm">
-                                <a href="{% url 'farm_status_edit' status.pk %}" 
-                                   class="btn btn-outline-primary" title="Editar">
-                                    <i class="bi bi-pencil"></i>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'farm_status_edit' status.pk %}" class="btn btn-outline-primary"
+                                    title="Editar registro" data-bs-toggle="tooltip">
+                                    <i class="bi bi-pencil-square"></i> Editar
                                 </a>
-                                <a href="{% url 'farm_status_delete' status.pk %}" 
-                                   class="btn btn-outline-danger" title="Eliminar"
-                                   onclick="return confirm('¿Eliminar este registro?')">
+                                <a href="{% url 'farm_status_delete' status.pk %}" class="btn btn-outline-danger"
+                                    title="Eliminar registro" data-bs-toggle="tooltip"
+                                    onclick="return confirm('¿Está seguro de eliminar el registro del {{ status.status_date|date:\"
+                                    d/m/Y\" }}?')">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>
                             {% else %}
-                            <span class="text-muted small">
-                                <i class="bi bi-lock"></i>
+                            <span class="text-muted" title="Sin permisos de edición">
+                                <i class="bi bi-lock-fill"></i>
                             </span>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
-                            No hay registros
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox display-1 d-block mb-3 text-secondary"></i>
+                                <h5>No hay registros de estado de granja</h5>
+                                <p class="mb-3">Comienza registrando el estado actual de tus aves</p>
+                                {% if can_write_production %}
+                                <a href="{% url 'farm_status_create' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Crear Primer Registro
+                                </a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        
-        {% if farm_statuses.has_other_pages %}
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
+    </div>
+
+    <!-- Paginación -->
+    {% if farm_statuses.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav aria-label="Navegación de páginas">
+            <ul class="pagination justify-content-center mb-0">
                 {% if farm_statuses.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ farm_statuses.previous_page_number }}">Anterior</a>
+                    <a class="page-link" href="?page=1">
+                        <i class="bi bi-chevron-double-left"></i> Primera
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ farm_statuses.previous_page_number }}">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
                 </li>
                 {% endif %}
-                
+
                 <li class="page-item active">
                     <span class="page-link">
                         Página {{ farm_statuses.number }} de {{ farm_statuses.paginator.num_pages }}
                     </span>
                 </li>
-                
+
                 {% if farm_statuses.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ farm_statuses.next_page_number }}">Siguiente</a>
+                    <a class="page-link" href="?page={{ farm_statuses.next_page_number }}">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ farm_statuses.paginator.num_pages }}">
+                        Última <i class="bi bi-chevron-double-right"></i>
+                    </a>
                 </li>
                 {% endif %}
             </ul>
         </nav>
-        {% endif %}
     </div>
+    {% endif %}
 </div>
+
+<!-- Ayuda contextual -->
+<div class="mt-3">
+    <small class="text-muted">
+        <i class="bi bi-lightbulb"></i>
+        <strong>Tip:</strong> El total de aves se calcula automáticamente sumando juveniles, machos y gallinas.
+    </small>
+</div>
+
+<script>
+    // Activar tooltips de Bootstrap
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 {% endblock %}

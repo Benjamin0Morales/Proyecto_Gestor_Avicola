@@ -29,8 +29,11 @@ def farm_status_list(request):
 @production_write_required
 def farm_status_create(request):
     """Crear nuevo estado de granja."""
+    from core.decorators import get_effective_role
+    user_role = get_effective_role(request)
+    
     if request.method == 'POST':
-        form = FarmStatusForm(request.POST)
+        form = FarmStatusForm(request.POST, user_role=user_role, is_edit=False)
         if form.is_valid():
             farm_status = form.save(commit=False)
             farm_status.created_by = request.user.id
@@ -38,7 +41,7 @@ def farm_status_create(request):
             messages.success(request, 'Estado de granja creado exitosamente')
             return redirect('farm_status_list')
     else:
-        form = FarmStatusForm()
+        form = FarmStatusForm(user_role=user_role, is_edit=False)
     
     context = {
         'form': form,
@@ -53,10 +56,12 @@ def farm_status_create(request):
 @production_write_required
 def farm_status_edit(request, pk):
     """Editar estado de granja existente."""
+    from core.decorators import get_effective_role
     farm_status = get_object_or_404(FarmStatus, pk=pk, is_active=True)
+    user_role = get_effective_role(request)
     
     if request.method == 'POST':
-        form = FarmStatusForm(request.POST, instance=farm_status)
+        form = FarmStatusForm(request.POST, instance=farm_status, user_role=user_role, is_edit=True)
         if form.is_valid():
             farm_status = form.save(commit=False)
             farm_status.updated_by = request.user.id
@@ -64,13 +69,15 @@ def farm_status_edit(request, pk):
             messages.success(request, 'Estado de granja actualizado exitosamente')
             return redirect('farm_status_list')
     else:
-        form = FarmStatusForm(instance=farm_status)
+        form = FarmStatusForm(instance=farm_status, user_role=user_role, is_edit=True)
     
     context = {
         'form': form,
         'title': 'Editar Estado de Granja',
         'cancel_url': 'farm_status_list',
-        'icon': 'bi-clipboard-data'
+        'icon': 'bi-clipboard-data',
+        'is_edit': True,
+        'user_role': user_role
     }
     return render(request, 'farm_status/form.html', context)
 
@@ -100,7 +107,7 @@ def egg_production_list(request):
     page_obj = paginator.get_page(page_number)
     
     context = {
-        'page_obj': page_obj,
+        'productions': page_obj,
         'title': 'Producción de Huevos'
     }
     return render(request, 'egg_production/list.html', context)

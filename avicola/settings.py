@@ -21,6 +21,14 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://avicolaeugenio.cl',
+    'http://PC-BENJA', 
+]
+
+
 # Custom User Model
 AUTH_USER_MODEL = 'core.User'
 
@@ -221,3 +229,7 @@ LOGS_DIR.mkdir(exist_ok=True)
 LOGIN_URL = 'web_login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'web_login'
+
+# Media files (uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

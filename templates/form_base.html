@@ -3,44 +3,60 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">
                     <i class="bi {{ icon|default:'bi-pencil' }}"></i> 
                     {{ title }}
                 </h4>
             </div>
             <div class="card-body">
-                <form method="post" novalidate>
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Error:</strong>
+                    {{ form.non_field_errors }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+                
+                <form method="post" novalidate id="mainForm">
                     {% csrf_token %}
-                    
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {{ form.non_field_errors }}
-                    </div>
-                    {% endif %}
                     
                     {% block form_content %}
                     {% for field in form %}
                     <div class="mb-3">
-                        {{ field.label_tag }}
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                            <span class="text-danger" title="Campo requerido">*</span>
+                            {% endif %}
+                        </label>
                         
                         {% if field.field.widget.input_type == 'checkbox' %}
                         <div class="form-check">
                             {{ field }}
+                            <label class="form-check-label" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
                             {% if field.help_text %}
-                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            <small class="form-text text-muted d-block">
+                                <i class="bi bi-info-circle"></i> {{ field.help_text }}
+                            </small>
                             {% endif %}
                         </div>
                         {% else %}
                         {{ field }}
                         {% if field.help_text %}
-                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                        <small class="form-text text-muted">
+                            <i class="bi bi-info-circle"></i> {{ field.help_text }}
+                        </small>
                         {% endif %}
                         {% endif %}
                         
                         {% if field.errors %}
                         <div class="invalid-feedback d-block">
+                            <i class="bi bi-exclamation-circle"></i>
                             {{ field.errors }}
                         </div>
                         {% endif %}
@@ -48,17 +64,80 @@
                     {% endfor %}
                     {% endblock %}
                     
-                    <div class="d-flex gap-2 justify-content-end mt-4">
-                        <a href="{% url cancel_url %}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> {{ submit_text|default:"Guardar" }}
-                        </button>
+                    <hr class="my-4">
+                    
+                    <div class="d-flex gap-2 justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-asterisk text-danger"></i> Campos requeridos
+                        </small>
+                        <div class="d-flex gap-2">
+                            <a href="{% url cancel_url %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> {{ submit_text|default:"Guardar" }}
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
+        
+        <!-- Ayuda contextual -->
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="bi bi-lightbulb"></i> 
+                <strong>Tip:</strong> Todos los cambios se guardan inmediatamente al hacer click en "Guardar".
+            </small>
+        </div>
     </div>
 </div>
+
+<style>
+/* Mejorar visualización de campos con error */
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(.375em + .1875rem) center;
+    background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+}
+
+/* Highlight de campos al hacer focus */
+.form-control:focus,
+.form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Mejorar botones */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+// Auto-focus en primer campo del formulario
+document.addEventListener('DOMContentLoaded', function() {
+    const firstInput = document.querySelector('#mainForm input:not([type="hidden"]), #mainForm select, #mainForm textarea');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Agregar clase is-invalid a campos con errores
+    document.querySelectorAll('.invalid-feedback').forEach(function(errorDiv) {
+        const field = errorDiv.previousElementSibling;
+        if (field && (field.classList.contains('form-control') || field.classList.contains('form-select'))) {
+            field.classList.add('is-invalid');
+        }
+    });
+});
+</script>
 {% endblock %}
+
